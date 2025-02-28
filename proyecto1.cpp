@@ -2,8 +2,6 @@
 #include <fstream>
 using namespace std;
 
-
-
 template <typename T>
 class Node {
     public:
@@ -119,8 +117,8 @@ class List
 };
 
 
-
 class MagicPoint;
+
 
 class MagicLine //Arista
 {
@@ -189,10 +187,12 @@ public:
         MagicPoints.postInsert(MagicPoints.last(), v);
     }
 
+
     void addMagicLine(float power, MagicPoint *v1, MagicPoint *v2){
         v1->addMagicLine(power, v2);
         v2->addMagicLine(power, v1);
     }
+
 
     void mostrarGrafos() {
         Node<MagicPoint*>* iterator = MagicPoints.first();
@@ -201,6 +201,7 @@ public:
             MagicPoints.next(iterator);
         }
     }
+
 
     MagicPoint* getMagicPoint(int index) {
         Node<MagicPoint*> *iterator = MagicPoints.first();
@@ -252,6 +253,7 @@ public:
         totalMagicPoints--;   
     }
 
+
     void findPathPerPower() {
         int visitedOrder[magicPointCount] = {0};
         bool visited[magicPointCount] = {false};
@@ -287,6 +289,7 @@ public:
         visited[current->pointID - 1] = false;
     }
 
+
     int findLongestCycle(int bestOrder[]) {
         bool visited[magicPointCount] = {false};
         int maxEdges = 0;
@@ -301,6 +304,7 @@ public:
         return maxEdges;
     }
 
+
     void findLongestPathUtil(MagicPoint* iterator, bool visited[], float &maxPower, float currentPower, int currentOrder[], int bestOrder[], int &maxLines, int currentLines) {
         visited[iterator->pointID - 1] = true;                                                              //Marcamos True con la ayuda del pointID (numero del vertice) y le restamos 1 para que concuerde con las posiciones del arreglo
         currentOrder[currentLines] = iterator->pointID;                                                     //Al arreglo de orden le asignamos el numero del vertice que estamos trabajando la primera iteracion "currentLines=0"              
@@ -312,6 +316,8 @@ public:
                 for (int i = 0; i <= maxLines; ++i) {
                     bestOrder[i] = currentOrder[i];
                 }
+                visited[iterator->pointID - 1] = false;
+                return;
             }
         }
 
@@ -327,6 +333,7 @@ public:
         visited[iterator->pointID - 1] = false;
     }
 
+
     float findLongestPath(int startID, int bestOrder[], int &maxEdges) {
         bool visited[magicPointCount] = {false};                                                            //Arreglo de boleanos para saber si el Vertice fue visitado
         float maxPower = 0.0;                                                                               //Total del poder que vamos a acumular
@@ -340,6 +347,7 @@ public:
         return maxPower;                                                                                    //retornamos el resultado obtenido.
     }
 
+    
     ~Spell() {
         Node<MagicPoint*>* iterator = MagicPoints.first();
         while (iterator != nullptr) {
@@ -348,7 +356,6 @@ public:
         }
     }
 };
-
 
 
 class SpellDetector
@@ -415,7 +422,7 @@ public:
         float longestPath = spells[0]->findLongestPath(1, bestOrder, maxEdges); 
         cout << "El camino mas largo tiene una ponderacion de " << longestPath << " y " << maxEdges << " aristas." << endl;
         cout << "Orden de visitados: ";
-        for (int i = 0; i < maxEdges; ++i) {
+        for (int i = 0; i <= maxEdges; ++i) {
             cout << bestOrder[i] << " ";
         }
         cout << endl;
@@ -440,8 +447,6 @@ public:
         delete[] spells;
     }
 };
-
-
 
 
 int main (){
