@@ -120,8 +120,7 @@ class List
 class MagicPoint;
 
 
-class MagicLine //Arista
-{
+class MagicLine { //Arista
 public:
     float Power;
     MagicPoint*point1;
@@ -131,8 +130,7 @@ public:
 };
 
 
-class MagicPoint //Vertice
-{
+class MagicPoint { //Vertice
 public:
     int pointID; 
     char magicRune;
@@ -165,20 +163,79 @@ public:
 };
 
 
-class Spell  //Grafo
-{
+class Spell  { //Grafo
 public:
     int magicPointCount;
+    int IlegallyCount;
     string name;
+    string spellname;
     string runes;
     List<MagicPoint*> MagicPoints;                           
 
-    Spell(): name(""), runes(""){};
-    Spell(string name, string runes, int magicPointCount): name(name), runes(runes),magicPointCount(magicPointCount){};
+    Spell(): name(""), runes(""), spellname(""), IlegallyCount(0){};
+    
+    Spell(string name, string runes, int magicPointCount)
+    : name(name), runes(runes),magicPointCount(magicPointCount), IlegallyCount(0), spellname(""){};
 
     bool isSpecialRune(char rune){
         return rune == 'I' || rune == 'Q' || rune == 'T' || rune == 'V' || rune == 'L'||
                rune == 'O' || rune == 'A' || rune == 'D' || rune == 'F';
+    }
+
+
+    bool isElementalRune(char rune){
+        return rune == 'I' || rune == 'Q' || rune == 'T' || rune == 'V' || rune == 'L'||
+               rune == 'O';
+    }
+
+
+    bool isVocal(char letter) {
+        return letter == 'a' || letter == 'e' || letter == 'i' || letter == 'o' || letter == 'u';
+    }
+
+
+    string ElementalType (char rune) { 
+        switch (rune){
+        case 'I':
+            return "Ignatum";
+            break;
+        case 'Q':
+            return "Aquos";
+            break;
+        case 'T':
+            return "Terraminium";
+            break;
+        case 'V':
+            return "Ventus";
+            break;
+        case 'L':
+            return "Lux";
+            break;
+        case 'O':
+            return "Tenebrae";
+            break;
+        default:
+            break;
+        }
+    }
+
+
+    string getLastname(int &StringSize) {
+        string lastname = "";
+        int i = 0;
+    
+        while (i < name.length()) {
+            if (name[i] == ' ') {
+                i++; 
+                break;
+            }
+            i++;
+        }    
+        while (i < name.length()) {
+            lastname += name[i++];
+            StringSize++;
+        }
+        return lastname;
     }
 
 
@@ -213,7 +270,85 @@ public:
         }
         return iterator != nullptr ? iterator->payload : nullptr;
     }
+    
 
+    void EnergySupport() {
+        Node<MagicPoint*> *iterator = MagicPoints.first();
+        while (iterator != nullptr) {
+            if (iterator->payload->magicRune == 'A') {
+                break; 
+            } else {
+                MagicPoints.next(iterator); 
+            }
+        }
+        Node<MagicLine> *lineiterator = iterator->payload->lines.first();
+        while (lineiterator != nullptr) {
+            if(lineiterator->payload.point2->magicRune == 'B') {
+                iterator->payload->lines.next(lineiterator);
+            } else {
+                IlegallyCount++;
+                break;
+            }
+        }
+    }
+
+
+    void CataliticAdyacency() {
+        Node<MagicPoint*> *iterator = MagicPoints.first();
+        while (iterator != nullptr) {
+            if (iterator->payload->magicRune == 'D') {
+                Node<MagicLine> *lineiterator = iterator->payload->lines.first();
+                while (lineiterator != nullptr) {
+                    if(isElementalRune(lineiterator->payload.point2->magicRune)) {
+                        IlegallyCount++;
+                        break;
+                    } else {
+                        iterator->payload->lines.next(lineiterator);
+                    }
+                }
+                MagicPoints.next(iterator); 
+            } else {
+                MagicPoints.next(iterator); 
+            }
+        }
+    }
+
+
+    void SpellName() {
+        int StringSize = 0;
+        Node<MagicPoint*>* iterator = MagicPoints.first();
+        while (iterator != nullptr) {
+            if (isElementalRune(iterator->payload->magicRune)) {
+                spellname += ElementalType(iterator->payload->magicRune);
+                break;
+            } else {
+                MagicPoints.next(iterator);
+            }
+        }
+        
+        string lastname = getLastname(StringSize);
+        if (StringSize > 0 && isVocal(lastname[StringSize - 1])) {
+            lastname[StringSize - 1] = 'i';
+            lastname += "um";
+        } else {
+            lastname += "um";
+        }
+
+        spellname += lastname;
+
+        int bestOrder[magicPointCount] = { 0 };
+        int maxEdges = 0;
+        float longestPath = findLongestPath(1, bestOrder, maxEdges);
+        int longestCycle = findLongestCycle(bestOrder);
+        if (longestPath >= longestCycle) {
+            spellname += " modicum";
+        } else if (longestPath <= longestCycle) {
+            spellname += " maximus";
+        } else if (longestPath == 0) {
+            spellname += " Arcante";
+        }
+    }
+    
 
     void findPathPerPower(int index, MagicPoint* iterator, bool visited[], int& totalMagicPoints, int& totalLine, float& totalPower, int visitedOrder[]) {
         if (index == magicPointCount-1){
@@ -276,7 +411,10 @@ public:
         while (lineIterator != nullptr) {
             MagicPoint* nextPoint = lineIterator->payload.point2;
             if (nextPoint == start && currentEdges > maxEdges) {
+                currentEdges++;
+                currentOrder[currentEdges] = nextPoint->pointID;
                 maxEdges = currentEdges;
+                currentEdges--;
                 for (int i = 0; i <= maxEdges; ++i) {
                     bestOrder[i] = currentOrder[i];
                 }
@@ -300,7 +438,7 @@ public:
             findLongestCycleUtil(iterator->payload, iterator->payload, visited, maxEdges, 0, nullptr, currentOrder, bestOrder);
             MagicPoints.next(iterator);
         }
-
+        if(maxEdges % 2 != 0) IlegallyCount++;
         return maxEdges;
     }
 
@@ -358,8 +496,7 @@ public:
 };
 
 
-class SpellDetector
-{
+class SpellDetector {
 private:
     Spell **spells;
     int spellCount;
@@ -388,7 +525,13 @@ public:
             spells[i] = new Spell(name, rune, vertexCount);
 
             for (int j = 1; j <= vertexCount; j++){
+                int countElementalRune = 0;
+                int countConfluentPoint = 0;
                 spells[i]->addMagicPoint(j, rune[j-1]); 
+                if (spells[i]->isElementalRune(rune[j-1])) countElementalRune++;
+                if (rune[j-1] == 'A') countConfluentPoint++;
+                if (countConfluentPoint == 2) spells[i]->IlegallyCount++;
+                if (countElementalRune == 4) spells[i]->IlegallyCount++;
             }
 
             for (int j = 0; j < edgeCount; j++){
@@ -406,6 +549,7 @@ public:
  
     }
 
+
     void printLongestCycle() {
         int bestOrder[spells[0]->magicPointCount] = {0};
         int longestCycle = spells[0]->findLongestCycle(bestOrder);
@@ -416,6 +560,16 @@ public:
         }
         cout << endl;
     }
+
+    void PrintIlegallities() {
+        spells[0]->EnergySupport();
+        spells[0]->CataliticAdyacency();
+        int ilegally = spells[0]->IlegallyCount;
+        cout << "Se han encontrado " << ilegally << " ilegalidades en el hechizo" << endl;
+        spells[0]->SpellName();
+        cout << "El nombre del hechizo es " << spells[0]->spellname << endl;
+    }
+
     void printLongestPath() {
         int bestOrder[spells[0]->magicPointCount] = {0};
         int maxEdges = 0;
@@ -428,9 +582,11 @@ public:
         cout << endl;
     }
 
+
     void printMostLarge(){
         spells[0]->findPathPerPower();
     }    
+
 
     void printGraf(){
         for (int i = 0; i < spellCount; i++){
@@ -454,7 +610,7 @@ int main (){
     a1.readSpell();
     a1.printLongestCycle();
     a1.printLongestPath();
-
+    a1.PrintIlegallities();
 
 
     return 0;
