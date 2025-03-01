@@ -2,6 +2,8 @@
 #include <fstream>
 using namespace std;
 
+////init Estructura de las listas y pilas
+
 template <typename T>
 class Node {
     public:
@@ -20,7 +22,6 @@ class Node {
             next = nullptr;
         }
 };
-
 template <typename T>
 class List
 {
@@ -115,10 +116,111 @@ class List
             cout << endl;
         }
 };
+template <typename T>
+class Stack : List<T> {
+    public:
+        bool isEmpty() {
+            return List<T>::isEmpty();
+        }
+        T* first() {
+            if (isEmpty()) return nullptr;
+            return &List<T>::first()->payload;
+        }
+        T pop() {
+            T x = List<T>::first()->payload;
+            List<T>::remove(List<T>::first());
+            return x;
+        }
+        void stack_push(T v) {
+            List<T>::preInsert(List<T>::first(), v);
+        }
+};
 
+////End Estructura de listas y pilas
+
+
+////Init Estructura de los magos y sus hechizos
+
+struct MagicSpell
+{
+    string name;                                                         //Nombre del Hechizo
+    int type;                                                            //Entero que dice q tipo de hechizo es
+    bool isLegal = false;                                                //siempre se inicia como !legal y se cambiara luego
+};
+
+class Mage
+{
+private:
+    string name;
+    List<MagicSpell> spells;
+    int id;
+    int spellCount;
+    int ilegalityCount;
+    bool underInvestigation = false;    
+public:
+    ////Init Constructores
+
+    Mage(string name, int id, bool ilegalyCount):name(name), spellCount(0), id(0){                                                         //Se usa para un mago que tenemos que evaluarle sus hechizos.
+        if (ilegalityCount) this->ilegalityCount++;
+        if (ilegalityCount >= 3){
+            this->underInvestigation = true;
+        }
+    };    
+    Mage(string name)
+    :name(name), spellCount(0), id(0),ilegalityCount(0),underInvestigation(true){};  //Se usa para un mago que hayamos encontrado en la lista de underInvestigation.
+          
+    ////End Constructores 
+
+    //// Init Funciones
+
+    void addSpell(string name, int type, bool isLegal, int id){                      //metodo para agregar hechizos.
+        MagicSpell* newSpell = new MagicSpell;                                      
+        newSpell->name = name;
+        newSpell->type = type;                                                       
+        newSpell->isLegal = isLegal;
+                                                                                    
+        Node<MagicSpell>* iterator = spells.first();                                    
+
+        while (iterator != nullptr && iterator->payload.type <= newSpell->type) {    //iteramos la lista de hechizos y comparamos el tipo de hechizo.
+            spells.next(iterator);                                                   //cada vez q nos movamos iremos comparando el TypoRune el cual es un numero   
+            iterator = iterator->next;                                               //cuando consigamos un numero mayor o igual al que estamos buscando                   
+        }     
+                                                                                     //sabremos que hemos llegaod a la posicion deseada
+        spells.preInsert(iterator, *newSpell);                                       //Agregamos el hechizo a la izquierda de Iterador
+
+        spellCount++;
+    }
+
+    ////End funciones
+
+    ////Init Getters y Setters
+
+    string getName(){
+        return name;
+    }
+    int getPosition(){
+        return id;
+    }
+
+    ////End Getters y Setters
+
+    ////Init Destructor
+
+    ~Mage(){
+        while (!spells.isEmpty()) {
+            spells.remove(spells.first());
+        }
+    };
+
+    ////Init Destructor
+};
+
+////End Estructura de los magos y sus hechizos
+
+
+////Init Estructura del grafo
 
 class MagicPoint;
-
 
 class MagicLine { //Arista
 public:
@@ -128,7 +230,6 @@ public:
     MagicLine(float power, MagicPoint *p1, MagicPoint *p2): Power(power), point1(p1), point2(p2){};
     MagicLine() : Power(0), point1(nullptr), point2(nullptr) {}
 };
-
 
 class MagicPoint { //Vertice
 public:
@@ -162,37 +263,35 @@ public:
     }
 };
 
-
 class Spell  { //Grafo
 public:
     int magicPointCount;
     int IlegallyCount;
+    int typeRune;   
+    //bool IsLegal                                               Hay que revisar esto!
     string name;
     string spellname;
     string runes;
     List<MagicPoint*> MagicPoints;                           
 
-    Spell(): name(""), runes(""), spellname(""), IlegallyCount(0){};
+    Spell(): name(""), runes(""), spellname(""), IlegallyCount(0), typeRune(typeRune){};
     
-    Spell(string name, string runes, int magicPointCount)
-    : name(name), runes(runes),magicPointCount(magicPointCount), IlegallyCount(0), spellname(""){};
+    Spell(string name, string runes, int magicPointCount, int typeRune)
+    :name(name), runes(runes),magicPointCount(magicPointCount), IlegallyCount(0), spellname(""), typeRune(typeRune){};
 
     bool isSpecialRune(char rune){
         return rune == 'I' || rune == 'Q' || rune == 'T' || rune == 'V' || rune == 'L'||
                rune == 'O' || rune == 'A' || rune == 'D' || rune == 'F';
     }
 
-
     bool isElementalRune(char rune){
         return rune == 'I' || rune == 'Q' || rune == 'T' || rune == 'V' || rune == 'L'||
                rune == 'O';
     }
 
-
     bool isVocal(char letter) {
         return letter == 'a' || letter == 'e' || letter == 'i' || letter == 'o' || letter == 'u';
     }
-
 
     string ElementalType (char rune) { 
         switch (rune){
@@ -219,7 +318,6 @@ public:
         }
     }
 
-
     string getLastname(int &StringSize) {
         string lastname = "";
         int i = 0;
@@ -238,18 +336,15 @@ public:
         return lastname;
     }
 
-
     void addMagicPoint(int pointID, char magicRune){
         MagicPoint* v = new MagicPoint(pointID, magicRune);
         MagicPoints.postInsert(MagicPoints.last(), v);
     }
 
-
     void addMagicLine(float power, MagicPoint *v1, MagicPoint *v2){
         v1->addMagicLine(power, v2);
         v2->addMagicLine(power, v1);
     }
-
 
     void mostrarGrafos() {
         Node<MagicPoint*>* iterator = MagicPoints.first();
@@ -258,7 +353,6 @@ public:
             MagicPoints.next(iterator);
         }
     }
-
 
     MagicPoint* getMagicPoint(int index) {
         Node<MagicPoint*> *iterator = MagicPoints.first();
@@ -271,7 +365,6 @@ public:
         return iterator != nullptr ? iterator->payload : nullptr;
     }
     
-
     void EnergySupport() {
         Node<MagicPoint*> *iterator = MagicPoints.first();
         while (iterator != nullptr) {
@@ -292,7 +385,6 @@ public:
         }
     }
 
-
     void CataliticAdyacency() {
         Node<MagicPoint*> *iterator = MagicPoints.first();
         while (iterator != nullptr) {
@@ -312,7 +404,6 @@ public:
             }
         }
     }
-
 
     void SpellName() {
         int StringSize = 0;
@@ -348,7 +439,9 @@ public:
             spellname += " Arcante";
         }
     }
+  
     
+    ////Init Seccion de buscadores
 
     void findPathPerPower(int index, MagicPoint* iterator, bool visited[], int& totalMagicPoints, int& totalLine, float& totalPower, int visitedOrder[]) {
         if (index == magicPointCount-1){
@@ -388,7 +481,6 @@ public:
         totalMagicPoints--;   
     }
 
-
     void findPathPerPower() {
         int visitedOrder[magicPointCount] = {0};
         bool visited[magicPointCount] = {false};
@@ -401,7 +493,6 @@ public:
             findPathPerPower(0, startPoint, visited, totalVertices, totalEdges, totalPower, visitedOrder);
         }
     }
-
 
     void findLongestCycleUtil(MagicPoint* start, MagicPoint* current, bool visited[], int& maxEdges, int currentEdges, MagicLine* parentEdge, int currentOrder[], int bestOrder[]) {
         visited[current->pointID - 1] = true;
@@ -427,7 +518,6 @@ public:
         visited[current->pointID - 1] = false;
     }
 
-
     int findLongestCycle(int bestOrder[]) {
         bool visited[magicPointCount] = {false};
         int maxEdges = 0;
@@ -441,7 +531,6 @@ public:
         if(maxEdges % 2 != 0) IlegallyCount++;
         return maxEdges;
     }
-
 
     void findLongestPathUtil(MagicPoint* iterator, bool visited[], float &maxPower, float currentPower, int currentOrder[], int bestOrder[], int &maxLines, int currentLines) {
         visited[iterator->pointID - 1] = true;                                                              //Marcamos True con la ayuda del pointID (numero del vertice) y le restamos 1 para que concuerde con las posiciones del arreglo
@@ -471,7 +560,6 @@ public:
         visited[iterator->pointID - 1] = false;
     }
 
-
     float findLongestPath(int startID, int bestOrder[], int &maxEdges) {
         bool visited[magicPointCount] = {false};                                                            //Arreglo de boleanos para saber si el Vertice fue visitado
         float maxPower = 0.0;                                                                               //Total del poder que vamos a acumular
@@ -484,8 +572,25 @@ public:
 
         return maxPower;                                                                                    //retornamos el resultado obtenido.
     }
+ 
+    ////End Seccion de buscadores
 
-    
+    ////Init seccion Getters y Setters
+
+    string getName(){
+        return name;
+    }
+    string getNameSpell(){
+        return spellname;
+    }
+
+
+    ////End seccion Getters y Setters
+
+
+
+    ////init Destructor
+
     ~Spell() {
         Node<MagicPoint*>* iterator = MagicPoints.first();
         while (iterator != nullptr) {
@@ -493,15 +598,43 @@ public:
             MagicPoints.next(iterator);
         }
     }
+
+    ////End Destructor
+
 };
 
+////End Estructura del grafo
+
+
+////Init Programa Principal
+
+/*
+class underInvestigation
+{
+private:
+    Stack<Mage> mages;                                 //Por ahora esta clase esta en desicion si la usare o no.
+public:
+
+};
+*/
 
 class SpellDetector {
 private:
+    List<Mage*> Mages;
     Spell **spells;
     int spellCount;
+    int magesCount;
 public:
-    SpellDetector(): spellCount(0), spells(nullptr){};
+    SpellDetector(): spellCount(0), magesCount(0), spells(nullptr){};
+
+    ////Init Seccion para leer archivos
+
+    /*void readUnderInvestigarion(){
+        ifstream papyrus ("underInvestigation.in");
+        if (!papyrus.is_open()){
+            return;
+        }
+    }*/
 
     void readSpell(){
         ifstream papyrus ("spellList.in");
@@ -509,7 +642,7 @@ public:
             return;
         }
         string line, name, rune;
-        int spellCount, vertexCount, edgeCount;
+        int spellCount, vertexCount, edgeCount, typeRune;
         
         papyrus >> spellCount;
         spells = new Spell *[spellCount];
@@ -521,8 +654,10 @@ public:
             papyrus >> vertexCount;
             papyrus >> rune;
             papyrus >> edgeCount;
- 
-            spells[i] = new Spell(name, rune, vertexCount);
+            
+            typeRune = kindRune(rune);
+
+            spells[i] = new Spell(name,rune,vertexCount,typeRune);     
 
             for (int j = 1; j <= vertexCount; j++){
                 int countElementalRune = 0;
@@ -543,12 +678,80 @@ public:
 
                 spells[i]->addMagicLine(power,point1,point2);
             }
+
+            ////Init Seccion de ilegalidad de hechizo
+
+            ////End seccion de ilegalidad de hechizo
+
+
+            ////Init Seccion para agregar los hechizos a los magos
+
+            int position = 0;
+
+            if(mageIsInTheParty(name, position)){                                                       
+                Node<Mage*>* iterator = Mages.first();                      // 1, 2, 3                            
+                while (iterator->payload->getPosition() != position){
+                    Mages.next(iterator);
+                }
+                iterator->payload->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IlegallyCount, position);       ////Recordar cambiar el ilegali
+            }else{
+                Mage *newMage = new Mage(name, magesCount+1, spells[i]->IlegallyCount);
+                newMage->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IlegallyCount, magesCount+1);
+                Mages.postInsert(Mages.last(), newMage);
+                this->magesCount++;
+            }
+
+            ////End Seccion para agregar los hechizos a los magos
+
             this->spellCount++;
         } 
+
         papyrus.close();
- 
     }
 
+    ////End Seccion para leer archivos
+
+    ////Init Seccion Funciones del programa
+
+    bool mageIsInTheParty(string name, int &position){                          
+        if (Mages.isEmpty()) return false;                               //Si la lista de magos esta vacia no nos interesa buscar
+        Node<Mage*> *iterator = Mages.first();                           //Creamos el iterador
+        while (iterator != nullptr){                            
+            if (iterator->payload->getName() == name){                   //Si el nombre del mago es igual al nombre que estamos buscando retornamos true
+                position = iterator->payload->getPosition();             //Si el nombre del mago es igual al nombre que estamos buscando retornamos true
+                return true;
+            };                  
+            Mages.next(iterator);
+        }   
+        return false;                                                    //Si no conseguimos el nombre retornamos false
+    }
+
+    int kindRune(string rune){
+        for (int i = 0; i < rune.length(); i++){                        //revisamos el arreglo de string, si conseguimos una runa 
+            if (rune[i] == 'I') return 1;                               //retornamos un numero dependiendo del tipo de runa
+            if (rune[i] == 'Q') return 2;                               //esto se asume que un hechizo siempre tiene el mismo
+            if (rune[i] == 'T') return 3;                               //tipo de runa elemental con que nos de una ya sabemos
+            if (rune[i] == 'V') return 4;                               //todas las demas
+            if (rune[i] == 'L') return 5;
+            if (rune[i] == 'O') return 6;
+        }
+        return 0;                                                       //si no conseguimos ningun tipo de runa elemental se considera 0 = Arcano
+    }
+
+    ////End Seccion Funciones del programa
+
+    ////Init Seccion para imprimir
+
+    void printMostLarge(){
+        spells[0]->findPathPerPower();
+    }    
+
+    void printGraf(){
+        for (int i = 0; i < spellCount; i++){
+            spells[i]->mostrarGrafos();
+            cout << "Siguiente " << endl;
+        }
+    }
 
     void printLongestCycle() {
         int bestOrder[spells[0]->magicPointCount] = {0};
@@ -582,19 +785,10 @@ public:
         cout << endl;
     }
 
-
-    void printMostLarge(){
-        spells[0]->findPathPerPower();
-    }    
+    ////End Seccion para imprimir
 
 
-    void printGraf(){
-        for (int i = 0; i < spellCount; i++){
-            spells[i]->mostrarGrafos();
-            cout << "Siguiente " << endl;
-        }
-    }
-
+    ////init Seccion Destructor
 
     ~SpellDetector() {
         for (int i = 0; i < spellCount; i++) {
@@ -602,7 +796,14 @@ public:
         }
         delete[] spells;
     }
+
+    ////End Seccion Destructor
+
 };
+
+////End Programa Principal
+
+
 
 
 int main (){
