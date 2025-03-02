@@ -158,6 +158,7 @@ private:
     int ilegalityCount;
     bool underInvestigation = false;    
 public:
+    
     ////Init Constructores
 
     Mage(string name, int id, bool ilegalyCount):name(name), spellCount(0), id(0){                                                         //Se usa para un mago que tenemos que evaluarle sus hechizos.
@@ -200,6 +201,18 @@ public:
     }
     int getPosition(){
         return id;
+    }
+    int getSpellCount(){
+        return spellCount;
+    }
+    int getIlegalityCount(){
+        return ilegalityCount;
+    }
+    bool getUnderInvestigation(){
+        return underInvestigation;
+    }
+    List<MagicSpell> getSpells() {
+        return spells;
     }
 
     ////End Getters y Setters
@@ -266,18 +279,17 @@ public:
 class Spell  { //Grafo
 public:
     int magicPointCount;
-    int IlegallyCount;
     int typeRune;   
-    //bool IsLegal                                               Hay que revisar esto!
+    bool IsLegal;                                               
     string name;
     string spellname;
     string runes;
     List<MagicPoint*> MagicPoints;                           
 
-    Spell(): name(""), runes(""), spellname(""), IlegallyCount(0), typeRune(typeRune){};
+    Spell(): name(""), runes(""), spellname(""), IsLegal(true), typeRune(typeRune){};
     
     Spell(string name, string runes, int magicPointCount, int typeRune)
-    :name(name), runes(runes),magicPointCount(magicPointCount), IlegallyCount(0), spellname(""), typeRune(typeRune){};
+    :name(name), runes(runes),magicPointCount(magicPointCount), IsLegal(true), spellname(""), typeRune(typeRune){};
 
     bool isSpecialRune(char rune){
         return rune == 'I' || rune == 'Q' || rune == 'T' || rune == 'V' || rune == 'L'||
@@ -294,28 +306,12 @@ public:
     }
 
     string ElementalType (char rune) { 
-        switch (rune){
-        case 'I':
-            return "Ignatum";
-            break;
-        case 'Q':
-            return "Aquos";
-            break;
-        case 'T':
-            return "Terraminium";
-            break;
-        case 'V':
-            return "Ventus";
-            break;
-        case 'L':
-            return "Lux";
-            break;
-        case 'O':
-            return "Tenebrae";
-            break;
-        default:
-            break;
-        }
+        if (rune == 'I') return "Ignatum";                               
+        if (rune == 'Q') return "Aquos";                             
+        if (rune == 'T') return "Terraminium";                               
+        if (rune == 'V') return "Ventus";                              
+        if (rune == 'L') return "Lux";
+        if (rune == 'O') return "Tenebrae";
     }
 
     string getLastname(int &StringSize) {
@@ -379,7 +375,7 @@ public:
             if(lineiterator->payload.point2->magicRune == 'B') {
                 iterator->payload->lines.next(lineiterator);
             } else {
-                IlegallyCount++;
+                this->IsLegal = false;
                 break;
             }
         }
@@ -392,7 +388,7 @@ public:
                 Node<MagicLine> *lineiterator = iterator->payload->lines.first();
                 while (lineiterator != nullptr) {
                     if(isElementalRune(lineiterator->payload.point2->magicRune)) {
-                        IlegallyCount++;
+                        this->IsLegal = false;
                         break;
                     } else {
                         iterator->payload->lines.next(lineiterator);
@@ -427,7 +423,7 @@ public:
 
         spellname += lastname;
 
-        int bestOrder[magicPointCount] = { 0 };
+        int bestOrder[magicPointCount] = {0};
         int maxEdges = 0;
         float longestPath = findLongestPath(1, bestOrder, maxEdges);
         int longestCycle = findLongestCycle(bestOrder);
@@ -528,7 +524,7 @@ public:
             findLongestCycleUtil(iterator->payload, iterator->payload, visited, maxEdges, 0, nullptr, currentOrder, bestOrder);
             MagicPoints.next(iterator);
         }
-        if(maxEdges % 2 != 0) IlegallyCount++;
+        if(maxEdges % 2 != 0) this->IsLegal = false;
         return maxEdges;
     }
 
@@ -621,6 +617,7 @@ public:
 class SpellDetector {
 private:
     List<Mage*> Mages;
+    List<string> UnderInvestigation;
     Spell **spells;
     int spellCount;
     int magesCount;
@@ -629,12 +626,18 @@ public:
 
     ////Init Seccion para leer archivos
 
-    /*void readUnderInvestigarion(){
-        ifstream papyrus ("underInvestigation.in");
-        if (!papyrus.is_open()){
+    void readUnderInvestigarion(){
+        ifstream wanted ("underInvestigation.in");
+        if (!wanted.is_open()){
             return;
         }
-    }*/
+        string name;
+        while (getline(wanted,name)){
+            UnderInvestigation.postInsert(UnderInvestigation.last(),name);
+        }
+
+        wanted.close();
+    }
 
     void readSpell(){
         ifstream papyrus ("spellList.in");
@@ -665,8 +668,8 @@ public:
                 spells[i]->addMagicPoint(j, rune[j-1]); 
                 if (spells[i]->isElementalRune(rune[j-1])) countElementalRune++;
                 if (rune[j-1] == 'A') countConfluentPoint++;
-                if (countConfluentPoint == 2) spells[i]->IlegallyCount++;
-                if (countElementalRune == 4) spells[i]->IlegallyCount++;
+                if (countConfluentPoint == 2) spells[i]->IsLegal = false;
+                if (countElementalRune == 4) spells[i]->IsLegal = false;
             }
 
             for (int j = 0; j < edgeCount; j++){
@@ -681,6 +684,10 @@ public:
 
             ////Init Seccion de ilegalidad de hechizo
 
+            spells[i]->EnergySupport();
+            spells[i]->CataliticAdyacency();
+            spells[i]->SpellName();
+
             ////End seccion de ilegalidad de hechizo
 
 
@@ -693,10 +700,10 @@ public:
                 while (iterator->payload->getPosition() != position){
                     Mages.next(iterator);
                 }
-                iterator->payload->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IlegallyCount, position);       ////Recordar cambiar el ilegali
+                iterator->payload->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IsLegal, position);       ////Recordar cambiar el ilegali
             }else{
-                Mage *newMage = new Mage(name, magesCount+1, spells[i]->IlegallyCount);
-                newMage->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IlegallyCount, magesCount+1);
+                Mage *newMage = new Mage(name, magesCount+1, spells[i]->IsLegal);
+                newMage->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IsLegal, magesCount+1);
                 Mages.postInsert(Mages.last(), newMage);
                 this->magesCount++;
             }
@@ -710,6 +717,69 @@ public:
     }
 
     ////End Seccion para leer archivos
+
+    ////Init Seccion de escritura de archivos
+
+    void processedSpells() {
+        ofstream processedSpells("processedSpells.out");
+
+        if (!processedSpells.is_open()) {
+            return;
+        }
+        Node<Mage*>* iterator = Mages.first();
+        processedSpells << "Hechizos Legales" << endl;                         // Procesamos los hechizos legales
+        processedSpells << endl;
+        while (iterator != nullptr){
+            Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
+            if (spellIterator->payload.isLegal) {
+                while (spellIterator != nullptr){
+                    processedSpells << spellIterator->payload.name << endl;
+                    spellIterator = spellIterator->next;
+                }
+                processedSpells << iterator->payload->getName() << endl;
+            } else {
+                spellIterator = spellIterator->next;
+            }
+            processedSpells << endl;
+            Mages.next(iterator);
+        }
+        processedSpells << "Hechizos Ilegales" << endl;                       // Procesamos los hechizos Ilegales
+        while (iterator != nullptr){
+            Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
+            if (!spellIterator->payload.isLegal) {
+                while (spellIterator != nullptr){
+                    processedSpells << spellIterator->payload.name;
+                    spellIterator = spellIterator->next;
+                }
+                processedSpells << iterator->payload->getName() << endl;
+            } else {
+                spellIterator = spellIterator->next;
+            }
+            Mages.next(iterator);
+        }
+        processedSpells.close();
+
+    }
+
+    void WantedUpdate() {
+        bool updated = false;          //Verificamos con la funcion UpdateWanted, la cual verifica si se actualizo la lista de underInvestigation                                    
+        UpdateWanted(updated);
+        if (updated) {                 //Si se modifico la lista, entonces, procederemos a modificar el underInvestigation.in
+            ofstream UnderInvestigationIn("underInvestigation.in");
+
+            if (!UnderInvestigationIn.is_open()) {
+            return;
+            }
+            Node<string> *iterator = UnderInvestigation.first();
+            while (iterator != nullptr) {
+                UnderInvestigationIn << iterator->payload << endl;
+                UnderInvestigation.next(iterator);
+            }
+            UnderInvestigationIn.close();
+        }
+    }
+
+    ////End Seccion Escritura de Archivos
 
     ////Init Seccion Funciones del programa
 
@@ -736,6 +806,19 @@ public:
             if (rune[i] == 'O') return 6;
         }
         return 0;                                                       //si no conseguimos ningun tipo de runa elemental se considera 0 = Arcano
+    }
+
+    void UpdateWanted(bool &Updated) {
+        Node<Mage*> *iterator = Mages.first();
+        while (iterator != nullptr) {
+            if(iterator->payload->getUnderInvestigation()) {
+                UnderInvestigation.postInsert(UnderInvestigation.last(), iterator->payload->getName());
+                Updated = true;
+                Mages.next(iterator);
+            } else {
+                Mages.next(iterator);
+            }
+        }
     }
 
     ////End Seccion Funciones del programa
@@ -767,7 +850,7 @@ public:
     void PrintIlegallities() {
         spells[0]->EnergySupport();
         spells[0]->CataliticAdyacency();
-        int ilegally = spells[0]->IlegallyCount;
+        int ilegally = spells[0]->IsLegal;
         cout << "Se han encontrado " << ilegally << " ilegalidades en el hechizo" << endl;
         spells[0]->SpellName();
         cout << "El nombre del hechizo es " << spells[0]->spellname << endl;
@@ -783,6 +866,35 @@ public:
             cout << bestOrder[i] << " ";
         }
         cout << endl;
+    }
+
+    void printMageList(){
+        Node<Mage*>* iterator = Mages.first();
+        while (iterator != nullptr){
+            cout << "Mago:" << iterator->payload->getName() << endl;
+            Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
+            while (spellIterator != nullptr){
+                cout << "Hechizo: " << spellIterator->payload.name << endl;
+                if (spellIterator->payload.isLegal) {
+                    cout << "El hechizo es legal" << endl;
+                    } else {
+                    cout << "El hechizo es ilegal" << endl;
+                }
+                spellIterator = spellIterator->next;
+                
+            }
+            Mages.next(iterator);
+            cout << endl;
+        }
+
+    }
+
+    void printWantedList() {
+        Node<string> *iterator = UnderInvestigation.first();
+        while(iterator != nullptr) {
+            cout << iterator->payload << endl;
+            UnderInvestigation.next(iterator);
+        }
     }
 
     ////End Seccion para imprimir
@@ -807,12 +919,20 @@ public:
 
 
 int main (){
-    SpellDetector a1;    
-    a1.readSpell();
-    a1.printLongestCycle();
-    a1.printLongestPath();
-    a1.PrintIlegallities();
-
+    SpellDetector a1;               //Creamos el objeto de tipo SpellDetector que manejara el programa
+    a1.readSpell();                 //Leemos los hechizos
+    a1.readUnderInvestigarion();    //Leemos la lista de bajo investigacion
+    a1.printLongestCycle();         //Esto lo podemos quitar(Solo efecto de prueba)
+    a1.printLongestPath();          //Esto lo podemos quitar(Solo efecto de prueba)
+    a1.printMageList();             //Esto lo podemos quitar(Solo efecto de prueba)
+    a1.printWantedList();           //Esto lo podemos quitar(Solo efecto de prueba)
+    a1.processedSpells();           /*En esta funcion hacemos el procesado de todas las reviones
+                                    Hechas anteriormente, en dado caso, en la lectura de cada grafo ya se 
+                                    ejecutan cada una de las funciones requeridas, como recorridos, verificaciones
+                                    de legalidad etc... Por tanto, aqui ya solo es pasar toda esa informacion recopilada
+                                    a processedSpells*/
+    a1.WantedUpdate();              /*Realizamos la actualizacion de la lista de bajo investigacion
+                                    en caso de ser necesario*/
 
     return 0;
 }
