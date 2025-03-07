@@ -11,7 +11,7 @@ class Node {
         Node<T>* prev;
         Node<T>* next;
 
-        Node(T v) {
+     Node(T v) {   
             payload = v;
             prev = nullptr;
             next = nullptr;
@@ -161,8 +161,8 @@ public:
     
     ////Init Constructores
 
-    Mage(string name, int id, bool ilegalyCount):name(name), spellCount(0), id(0){                                                         //Se usa para un mago que tenemos que evaluarle sus hechizos.
-        if (ilegalityCount) this->ilegalityCount++;
+    Mage(string name, int id, bool isLegal):name(name), spellCount(0), id(0), ilegalityCount(0){                                                         //Se usa para un mago que tenemos que evaluarle sus hechizos.
+        if (!isLegal) this->ilegalityCount++;
         if (ilegalityCount >= 3){
             this->underInvestigation = true;
         }
@@ -183,8 +183,7 @@ public:
         Node<MagicSpell>* iterator = spells.first();                                    
 
         while (iterator != nullptr && iterator->payload.type <= newSpell->type) {    //iteramos la lista de hechizos y comparamos el tipo de hechizo.
-            spells.next(iterator);                                                   //cada vez q nos movamos iremos comparando el TypoRune el cual es un numero   
-            iterator = iterator->next;                                               //cuando consigamos un numero mayor o igual al que estamos buscando                   
+                spells.next(iterator);                                                //cada vez q nos movamos iremos comparando el TypoRune el cual es un numero                                         //cuando consigamos un numero mayor o igual al que estamos buscando                   
         }     
                                                                                      //sabremos que hemos llegaod a la posicion deseada
         spells.preInsert(iterator, *newSpell);                                       //Agregamos el hechizo a la izquierda de Iterador
@@ -306,12 +305,12 @@ public:
     }
 
     string ElementalType (char rune) { 
-        if (rune == 'I') return "Ignatum";                               
-        if (rune == 'Q') return "Aquos";                             
-        if (rune == 'T') return "Terraminium";                               
-        if (rune == 'V') return "Ventus";                              
-        if (rune == 'L') return "Lux";
-        if (rune == 'O') return "Tenebrae";
+        if (rune == 'I') return "Ignatum ";                               
+        if (rune == 'Q') return "Aquos ";                             
+        if (rune == 'T') return "Terraminium ";                               
+        if (rune == 'V') return "Ventus ";                              
+        if (rune == 'L') return "Lux ";
+        if (rune == 'O') return "Tenebrae ";
     }
 
     string getLastname(int &StringSize) {
@@ -427,7 +426,7 @@ public:
         int maxEdges = 0;
         float longestPath = findLongestPath(1, bestOrder, maxEdges);
         int longestCycle = findLongestCycle(bestOrder);
-        if (longestPath >= longestCycle) {
+        if (longestPath > longestCycle) {
             spellname += " modicum";
         } else if (longestPath <= longestCycle) {
             spellname += " maximus";
@@ -640,7 +639,7 @@ public:
     }
 
     void readSpell(){
-        ifstream papyrus ("spellList.in");
+        ifstream papyrus ("spellList2.in");
         if (!papyrus.is_open()){
             return;
         }
@@ -689,7 +688,8 @@ public:
             spells[i]->SpellName();
 
             ////End seccion de ilegalidad de hechizo
-
+            cout << "PROBANDO EN LECTURA" << endl;
+            cout << "MI LEGALIDAD ES DE  " << spells[i]->IsLegal;
 
             ////Init Seccion para agregar los hechizos a los magos
 
@@ -743,12 +743,14 @@ public:
             processedSpells << endl;
             Mages.next(iterator);
         }
-        processedSpells << "Hechizos Ilegales" << endl;                       // Procesamos los hechizos Ilegales
+        iterator = Mages.first();
+        processedSpells << "Hechizos Ilegales" << endl; 
+        processedSpells << endl;                                    // Procesamos los hechizos Ilegales
         while (iterator != nullptr){
             Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
             if (!spellIterator->payload.isLegal) {
                 while (spellIterator != nullptr){
-                    processedSpells << spellIterator->payload.name;
+                    processedSpells << spellIterator->payload.name << endl;
                     spellIterator = spellIterator->next;
                 }
                 processedSpells << iterator->payload->getName() << endl;
@@ -766,7 +768,7 @@ public:
         UpdateWanted(updated);
         if (updated) {                 //Si se modifico la lista, entonces, procederemos a modificar el underInvestigation.in
             ofstream UnderInvestigationIn("underInvestigation.in");
-
+            
             if (!UnderInvestigationIn.is_open()) {
             return;
             }
