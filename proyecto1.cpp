@@ -174,20 +174,43 @@ public:
 
     //// Init Funciones
 
-    void addSpell(string name, int type, bool isLegal, int id){                      //metodo para agregar hechizos.
-        MagicSpell* newSpell = new MagicSpell;                                      
+    void addSpell(string name, int type, bool isLegal, int id) {
+        MagicSpell* newSpell = new MagicSpell;
         newSpell->name = name;
-        newSpell->type = type;                                                       
+        newSpell->type = type;
         newSpell->isLegal = isLegal;
-                                                                                    
-        Node<MagicSpell>* iterator = spells.first();                                    
-
-        while (iterator != nullptr && iterator->payload.type <= newSpell->type) {    //iteramos la lista de hechizos y comparamos el tipo de hechizo.
-                spells.next(iterator);                                                //cada vez q nos movamos iremos comparando el TypoRune el cual es un numero                                         //cuando consigamos un numero mayor o igual al que estamos buscando                   
-        }     
-                                                                                     //sabremos que hemos llegaod a la posicion deseada
-        spells.preInsert(iterator, *newSpell);                                       //Agregamos el hechizo a la izquierda de Iterador
-
+    
+        Node<MagicSpell>* iterator = spells.first();
+    
+        // Si la lista esta vacia, insertamos al principio (PostInsert o PreInsert es indiferente)
+        if (iterator == nullptr) {
+            spells.postInsert(spells.first(), *newSpell); //Se inserta al principio
+            spellCount++;
+            return;
+        }
+    
+        // Si el iterador no es nullptr(La lista no esta Vacia) entonces:
+        /*Vamos a buscar la posicion donde el type, es decir el tipo de runa, sea mayor
+        para garantizar el orden de impresion por tipo de hechizo
+        */
+        while (iterator != nullptr && iterator->payload.type <= newSpell->type) {
+            spells.next(iterator);
+        }
+    
+        // En caso de que estemos en el final de la lista:
+        /*El nuevo hechizo a insertar sera mayor que todos o en su defecto igual 
+        Por tanto lo insertaremos al final de la lista con apuntador Last de la lista como
+        puntero
+        */
+        if (iterator == nullptr) {
+            // Insertar al final de la lista
+            spells.postInsert(spells.last(), *newSpell);
+        } else {
+            // Insertar antes del nodo actual, este es el caso donde encontramos el iterador mayor y
+            // lo insertaremos antes del nodo mayor a el por tipo
+            spells.preInsert(iterator, *newSpell);
+        }
+    
         spellCount++;
     }
 
@@ -428,7 +451,7 @@ public:
         int longestCycle = findLongestCycle(bestOrder);
         if (longestPath > longestCycle) {
             spellname += " modicum";
-        } else if (longestPath <= longestCycle) {
+        } else if (longestPath <= longestCycle && longestPath != 0) {
             spellname += " maximus";
         } else if (longestPath == 0) {
             spellname += " Arcante";
@@ -639,7 +662,7 @@ public:
     }
 
     void readSpell(){
-        ifstream papyrus ("spellList2.in");
+        ifstream papyrus ("spellList6.in");
         if (!papyrus.is_open()){
             return;
         }
@@ -734,13 +757,13 @@ public:
             if (spellIterator->payload.isLegal) {
                 while (spellIterator != nullptr){
                     processedSpells << spellIterator->payload.name << endl;
+                    processedSpells << iterator->payload->getName() << endl;
+                    processedSpells << endl;
                     spellIterator = spellIterator->next;
                 }
-                processedSpells << iterator->payload->getName() << endl;
             } else {
                 spellIterator = spellIterator->next;
             }
-            processedSpells << endl;
             Mages.next(iterator);
         }
         iterator = Mages.first();
@@ -752,8 +775,9 @@ public:
                 while (spellIterator != nullptr){
                     processedSpells << spellIterator->payload.name << endl;
                     spellIterator = spellIterator->next;
+                    processedSpells << iterator->payload->getName() << endl;
+                    processedSpells << endl;
                 }
-                processedSpells << iterator->payload->getName() << endl;
             } else {
                 spellIterator = spellIterator->next;
             }
