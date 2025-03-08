@@ -161,14 +161,7 @@ public:
     
     ////Init Constructores
 
-    Mage(string name, int id, bool isLegal):name(name), spellCount(0), id(0), ilegalityCount(0){                                                         //Se usa para un mago que tenemos que evaluarle sus hechizos.
-        if (!isLegal) this->ilegalityCount++;
-        if (ilegalityCount >= 3){
-            this->underInvestigation = true;
-        }
-    };    
-    Mage(string name)
-    :name(name), spellCount(0), id(0),ilegalityCount(0),underInvestigation(true){};  //Se usa para un mago que hayamos encontrado en la lista de underInvestigation.
+    Mage(string name, int id, bool isLegal):name(name), spellCount(0), id(id), ilegalityCount(0){};                                                           //Se usa para un mago que tenemos que evaluarle sus hechizos.
           
     ////End Constructores 
 
@@ -212,6 +205,11 @@ public:
         }
     
         spellCount++;
+    }
+
+    void IlegallyCount(bool IsLegal) {
+        if (!IsLegal) ilegalityCount++;
+        if (ilegalityCount >= 3) underInvestigation = true;
     }
 
     ////End funciones
@@ -662,7 +660,7 @@ public:
     }
 
     void readSpell(){
-        ifstream papyrus ("spellList6.in");
+        ifstream papyrus ("spellList2.in");
         if (!papyrus.is_open()){
             return;
         }
@@ -723,10 +721,12 @@ public:
                 while (iterator->payload->getPosition() != position){
                     Mages.next(iterator);
                 }
+                iterator->payload->IlegallyCount(spells[i]->IsLegal);
                 iterator->payload->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IsLegal, position);       ////Recordar cambiar el ilegali
             }else{
                 Mage *newMage = new Mage(name, magesCount+1, spells[i]->IsLegal);
                 newMage->addSpell(spells[i]->getNameSpell(), typeRune, spells[i]->IsLegal, magesCount+1);
+                newMage->IlegallyCount(spells[i]->IsLegal);
                 Mages.postInsert(Mages.last(), newMage);
                 this->magesCount++;
             }
@@ -754,15 +754,17 @@ public:
         processedSpells << endl;
         while (iterator != nullptr){
             Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
-            if (spellIterator->payload.isLegal) {
-                while (spellIterator != nullptr){
+            while (spellIterator != nullptr) {
+                if (spellIterator->payload.isLegal) {
+               
                     processedSpells << spellIterator->payload.name << endl;
                     processedSpells << iterator->payload->getName() << endl;
                     processedSpells << endl;
                     spellIterator = spellIterator->next;
+                
+                } else {
+                    spellIterator = spellIterator->next;
                 }
-            } else {
-                spellIterator = spellIterator->next;
             }
             Mages.next(iterator);
         }
@@ -771,15 +773,17 @@ public:
         processedSpells << endl;                                    // Procesamos los hechizos Ilegales
         while (iterator != nullptr){
             Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
-            if (!spellIterator->payload.isLegal) {
-                while (spellIterator != nullptr){
+            while (spellIterator != nullptr) {
+                if (!spellIterator->payload.isLegal) {
+                
                     processedSpells << spellIterator->payload.name << endl;
                     spellIterator = spellIterator->next;
                     processedSpells << iterator->payload->getName() << endl;
                     processedSpells << endl;
+                    
+                } else {
+                    spellIterator = spellIterator->next;
                 }
-            } else {
-                spellIterator = spellIterator->next;
             }
             Mages.next(iterator);
         }
