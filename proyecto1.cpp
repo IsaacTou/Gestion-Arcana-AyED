@@ -842,9 +842,22 @@ public:
         Node<Mage*> *iterator = Mages.first();
         while (iterator != nullptr) {
             if(iterator->payload->getUnderInvestigation()) {
-                UnderInvestigation.postInsert(UnderInvestigation.last(), iterator->payload->getName());
-                Updated = true;
-                Mages.next(iterator);
+                bool IsRepetead = false;
+                Node<string> *iteratorUnder = UnderInvestigation.first();
+                while (iteratorUnder != nullptr) {
+                    if(iteratorUnder->payload == iterator->payload->getName()) {
+                        Mages.next(iterator);
+                        IsRepetead = true;
+                        break;
+                    } else {
+                        UnderInvestigation.next(iteratorUnder);
+                    }
+                }
+                if(!IsRepetead) {
+                    UnderInvestigation.postInsert(UnderInvestigation.last(), iterator->payload->getName());
+                    Updated = true;
+                    Mages.next(iterator);
+                }
             } else {
                 Mages.next(iterator);
             }
