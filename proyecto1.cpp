@@ -116,27 +116,8 @@ class List
             cout << endl;
         }
 };
-template <typename T>
-class Stack : List<T> {
-    public:
-        bool isEmpty() {
-            return List<T>::isEmpty();
-        }
-        T* first() {
-            if (isEmpty()) return nullptr;
-            return &List<T>::first()->payload;
-        }
-        T pop() {
-            T x = List<T>::first()->payload;
-            List<T>::remove(List<T>::first());
-            return x;
-        }
-        void stack_push(T v) {
-            List<T>::preInsert(List<T>::first(), v);
-        }
-};
 
-////End Estructura de listas y pilas
+////End Estructura de listas 
 
 
 ////Init Estructura de los magos y sus hechizos
@@ -459,56 +440,6 @@ public:
     
     ////Init Seccion de buscadores
 
-    void findPathPerPower(int index, MagicPoint* iterator, bool visited[], int& totalMagicPoints, int& totalLine, float& totalPower, int visitedOrder[]) {
-        if (index == magicPointCount-1){
-            cout << "Camino encontrado." << endl;
-            cout << "Total de Vertices visitados: " << totalMagicPoints << endl;
-            cout << "Total de aristas visitados: " << totalLine << endl; 
-            cout << "Total Poder utilizado: " << totalPower <<  endl;
-            cout << "Orden de visitados: ";
-            for (int i = 0; i < magicPointCount; i++){
-                cout << visitedOrder[i] << " ";
-            }
-            cout << endl;
-            return;
-        }
-
-        visited[iterator->pointID -1] = true;
-        totalMagicPoints++;
-        visitedOrder[index] = iterator->pointID;
-
-        Node<MagicLine>* lineIterator = iterator->lines.first();
-        while (lineIterator != nullptr){
-            MagicPoint* nextPoint = lineIterator->payload.point2;
-            if (!visited[nextPoint->pointID-1]){
-                totalLine++;
-                totalPower += lineIterator->payload.Power;
-                findPathPerPower(index+1,nextPoint,visited,totalMagicPoints,totalLine,totalPower,visitedOrder);
-                if(index == magicPointCount-1){
-                    return;
-                }
-                totalLine--;
-                totalPower -= lineIterator->payload.Power;
-            }
-            iterator->lines.next(lineIterator);
-        }
-
-        visited[iterator->pointID-1] = false;
-        totalMagicPoints--;   
-    }
-
-    void findPathPerPower() {
-        int visitedOrder[magicPointCount] = {0};
-        bool visited[magicPointCount] = {false};
-        int totalVertices = 0;
-        int totalEdges = 0;
-        float totalPower = 0.0;
-    
-        MagicPoint* startPoint = getMagicPoint(1);
-        if (startPoint != nullptr) {
-            findPathPerPower(0, startPoint, visited, totalVertices, totalEdges, totalPower, visitedOrder);
-        }
-    }
 
     void findLongestCycleUtil(MagicPoint* start, MagicPoint* current, bool visited[], int& maxEdges, int currentEdges, MagicLine* parentEdge, int currentOrder[], int bestOrder[]) {
         visited[current->pointID - 1] = true;
@@ -624,16 +555,6 @@ public:
 
 ////Init Programa Principal
 
-/*
-class underInvestigation
-{
-private:
-    Stack<Mage> mages;                                 //Por ahora esta clase esta en desicion si la usare o no.
-public:
-
-};
-*/
-
 class SpellDetector {
 private:
     List<Mage*> Mages;
@@ -660,7 +581,7 @@ public:
     }
 
     void readSpell(){
-        ifstream papyrus ("spellList2.in");
+        ifstream papyrus ("spellList.in");
         if (!papyrus.is_open()){
             return;
         }
@@ -709,8 +630,6 @@ public:
             spells[i]->SpellName();
 
             ////End seccion de ilegalidad de hechizo
-            cout << "PROBANDO EN LECTURA" << endl;
-            cout << "MI LEGALIDAD ES DE  " << spells[i]->IsLegal;
 
             ////Init Seccion para agregar los hechizos a los magos
 
@@ -868,77 +787,39 @@ public:
 
     ////Init Seccion para imprimir
 
-    void printMostLarge(){
-        spells[0]->findPathPerPower();
-    }    
+    // void printMostLarge(){
+    //     spells[0]->findPathPerPower();
+    // }    
 
-    void printGraf(){
-        for (int i = 0; i < spellCount; i++){
-            spells[i]->mostrarGrafos();
-            cout << "Siguiente " << endl;
-        }
-    }
+    // void printGraf(){
+    //     for (int i = 0; i < spellCount; i++){
+    //         spells[i]->mostrarGrafos();
+    //         cout << "Siguiente " << endl;
+    //     }
+    // }
 
-    void printLongestCycle() {
-        int bestOrder[spells[0]->magicPointCount] = {0};
-        int longestCycle = spells[0]->findLongestCycle(bestOrder);
-        cout << "El ciclo simple mas largo tiene " << longestCycle << " aristas." << endl;
-        cout << "Orden de visitados: ";
-        for (int i = 0; i <= longestCycle; ++i) {
-            cout << bestOrder[i] << " ";
-        }
-        cout << endl;
-    }
+    // void printLongestCycle() {
+    //     int bestOrder[spells[0]->magicPointCount] = {0};
+    //     int longestCycle = spells[0]->findLongestCycle(bestOrder);
+    //     cout << "El ciclo simple mas largo tiene " << longestCycle << " aristas." << endl;
+    //     cout << "Orden de visitados: ";
+    //     for (int i = 0; i <= longestCycle; ++i) {
+    //         cout << bestOrder[i] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
-    void PrintIlegallities() {
-        spells[0]->EnergySupport();
-        spells[0]->CataliticAdyacency();
-        int ilegally = spells[0]->IsLegal;
-        cout << "Se han encontrado " << ilegally << " ilegalidades en el hechizo" << endl;
-        spells[0]->SpellName();
-        cout << "El nombre del hechizo es " << spells[0]->spellname << endl;
-    }
-
-    void printLongestPath() {
-        int bestOrder[spells[0]->magicPointCount] = {0};
-        int maxEdges = 0;
-        float longestPath = spells[0]->findLongestPath(1, bestOrder, maxEdges); 
-        cout << "El camino mas largo tiene una ponderacion de " << longestPath << " y " << maxEdges << " aristas." << endl;
-        cout << "Orden de visitados: ";
-        for (int i = 0; i <= maxEdges; ++i) {
-            cout << bestOrder[i] << " ";
-        }
-        cout << endl;
-    }
-
-    void printMageList(){
-        Node<Mage*>* iterator = Mages.first();
-        while (iterator != nullptr){
-            cout << "Mago:" << iterator->payload->getName() << endl;
-            Node<MagicSpell> *spellIterator = iterator->payload->getSpells().first();
-            while (spellIterator != nullptr){
-                cout << "Hechizo: " << spellIterator->payload.name << endl;
-                if (spellIterator->payload.isLegal) {
-                    cout << "El hechizo es legal" << endl;
-                    } else {
-                    cout << "El hechizo es ilegal" << endl;
-                }
-                spellIterator = spellIterator->next;
-                
-            }
-            Mages.next(iterator);
-            cout << endl;
-        }
-
-    }
-
-    void printWantedList() {
-        Node<string> *iterator = UnderInvestigation.first();
-        while(iterator != nullptr) {
-            cout << iterator->payload << endl;
-            UnderInvestigation.next(iterator);
-        }
-    }
+    // void printLongestPath() {
+    //     int bestOrder[spells[0]->magicPointCount] = {0};
+    //     int maxEdges = 0;
+    //     float longestPath = spells[0]->findLongestPath(1, bestOrder, maxEdges); 
+    //     cout << "El camino mas largo tiene una ponderacion de " << longestPath << " y " << maxEdges << " aristas." << endl;
+    //     cout << "Orden de visitados: ";
+    //     for (int i = 0; i <= maxEdges; ++i) {
+    //         cout << bestOrder[i] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
     ////End Seccion para imprimir
 
@@ -950,6 +831,7 @@ public:
             delete spells[i];  
         }
         delete[] spells;
+
     }
 
     ////End Seccion Destructor
@@ -965,10 +847,6 @@ int main (){
     SpellDetector a1;               //Creamos el objeto de tipo SpellDetector que manejara el programa
     a1.readSpell();                 //Leemos los hechizos
     a1.readUnderInvestigarion();    //Leemos la lista de bajo investigacion
-    a1.printLongestCycle();         //Esto lo podemos quitar(Solo efecto de prueba)
-    a1.printLongestPath();          //Esto lo podemos quitar(Solo efecto de prueba)
-    a1.printMageList();             //Esto lo podemos quitar(Solo efecto de prueba)
-    a1.printWantedList();           //Esto lo podemos quitar(Solo efecto de prueba)
     a1.processedSpells();           /*En esta funcion hacemos el procesado de todas las reviones
                                     Hechas anteriormente, en dado caso, en la lectura de cada grafo ya se 
                                     ejecutan cada una de las funciones requeridas, como recorridos, verificaciones
